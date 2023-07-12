@@ -1,0 +1,173 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iomanip>
+
+using namespace std;
+
+class Record {
+public:
+    string age;
+    string usn;
+    string name;
+    string sem;
+    string branch;
+};
+
+void retrieveDetails(const string& stNo) {
+    ifstream file("record.txt");
+    Record rec;
+    string index, usn, name, age, sem, branch;
+
+    while (getline(file, index, '|')) {
+        getline(file, usn, '|');
+        getline(file, name, '|');
+        getline(file, age, '|');
+        getline(file, sem, '|');
+        getline(file, branch);
+
+        if (index == stNo) {
+            cout << "\nStudent Details:\n";
+            cout << "USN\tName\tAge\tSem\tBranch\n";
+            cout << usn << "\t" << name << "\t" << age << "\t" << sem << "\t" << branch << endl;
+            return;
+        }
+    }
+
+    cout << "Record not found." << endl;
+}
+
+void deleteRecord(const string& usno) {
+    ifstream fileIn("index.txt");
+    ofstream fileOut("temp_index.txt");
+    string index, usn;
+    int flag = 0;
+
+    while (getline(fileIn, usn, '|')) {
+        getline(fileIn, index);
+        if (usn == usno) {
+            flag = 1;
+            continue;
+        }
+
+        fileOut << usn << "|" << index << endl;
+    }
+
+    fileIn.close();
+    fileOut.close();
+
+    if (flag) {
+        remove("index.txt");
+        rename("temp_index.txt", "index.txt");
+
+        ifstream fileIn2("record.txt");
+        ofstream fileOut2("temp_record.txt");
+        string usn2, name, age, sem, branch;
+
+        while (getline(fileIn2, usn2, '|')) {
+            getline(fileIn2, name, '|');
+            getline(fileIn2, age, '|');
+            getline(fileIn2, sem, '|');
+            getline(fileIn2, branch);
+
+            if (usn2 != usno) {
+                fileOut2 << usn2 << "|" << name << "|" << age << "|" << sem << "|" << branch << endl;
+            }
+        }
+
+        fileIn2.close();
+        fileOut2.close();
+
+        remove("record.txt");
+        rename("temp_record.txt", "record.txt");
+
+        cout << "Record deleted successfully." << endl;
+    } else {
+        cout << "Record not found." << endl;
+    }
+}
+
+int main() {
+    int choice;
+    string stUsn;
+
+    cout << "Enter the choice:" << endl;
+    cout << "1: Add record" << endl;
+    cout << "2: Search record" << endl;
+    cout << "3: Delete record" << endl;
+    cout << "4: Display record" << endl;
+    cout << "5: Exit" << endl;
+
+    while (true) {
+        cout << "\nEnter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1: {
+                int no;
+                cout << "\nEnter the number of students: ";
+                cin >> no;
+
+                ofstream fileIndex("index.txt", ios::app);
+                ofstream fileRecord("record.txt", ios::app);
+
+                for (int i = 0; i < no; i++) {
+                    Record rec;
+                    cout << "\nName: ";
+                    cin >> rec.name;
+                    cout << "Age: ";
+                    cin >> rec.age;
+                    cout << "USN: ";
+                    cin >> rec.usn;
+                    cout << "Semester: ";
+                    cin >> rec.sem;
+                    cout << "Branch: ";
+                    cin >> rec.branch;
+
+                    fileIndex << rec.usn << "|" << i << endl;
+                    fileRecord << rec.usn << "|" << rec.name << "|" << rec.age << "|" << rec.sem << "|" << rec.branch << endl;
+                }
+
+                fileIndex.close();
+                fileRecord.close();
+
+                break;
+            }
+            case 2: {
+                cout << "\nEnter the USN of the student record to be searched: ";
+                cin >> stUsn;
+                retrieveDetails(stUsn);
+                break;
+            }
+            case 3: {
+                cout << "\nEnter the USN of the student record to be deleted: ";
+                cin >> stUsn;
+                deleteRecord(stUsn);
+                break;
+            }
+            case 4: {
+                ifstream file("record.txt");
+                string usn, name, age, sem, branch;
+
+                cout << "\nUSN\tName\tAge\tSem\tBranch\n";
+                while (getline(file, usn, '|')) {
+                    getline(file, name, '|');
+                    getline(file, age, '|');
+                    getline(file, sem, '|');
+                    getline(file, branch);
+                    cout << usn << "\t" << name << "\t" << age << "\t" << sem << "\t" << branch << endl;
+                }
+
+                file.close();
+                break;
+            }
+            case 5:
+                exit(0);
+            default:
+                cout << "Invalid choice! Please try again." << endl;
+                break;
+        }
+    }
+
+    return 0;
+}
